@@ -49,6 +49,11 @@ class VideoAppState extends State<VideoApp>{
                     _position = _controller.value.position;
                   });
                 }
+                if(_controller.value.position.inSeconds >= _controller.value.duration.inSeconds){
+                  setState(() {
+                    isVis = true;
+                  });
+                }
           },
         );
       });
@@ -66,21 +71,35 @@ class VideoAppState extends State<VideoApp>{
     String nameFile =
     urlString[urlString.length-1].split('-').join(' ').split('.')[0];//вычленить имя из URL
 
-    int jkt=0;
-    void timer() {
-      log('onTap');
-      setState(() {
-        isVis = !isVis;
-      });
-      jkt++;//лечилка >:( не лечит...
-      Future.delayed(const Duration(seconds: 2), () {
-        if(jkt>1) return;
-        //if(isVis == false) return;
+    void timer(String text) {
+      log(text);
+      if(_controller.value.isPlaying){
+        setState(() {
+          isVis = !isVis;
+        });
+      }
+      Future.delayed(const Duration(seconds: 5), () {
+        if(_controller.value.isPlaying){
+          setState(() {
+            isVis = false;
+          });
+        }
+      },);
+    }
+
+    void showHide(String text){
+      log(text);
+      if(_controller.value.isPlaying){
+        _controller.pause();
+        setState(() {
+          isVis = true;
+        });
+      } else{
+        _controller.play();
         setState(() {
           isVis = false;
         });
-        jkt = 0;
-      },);
+      }
     }
 
     return MaterialApp(
@@ -89,16 +108,8 @@ class VideoAppState extends State<VideoApp>{
         body: MouseRegion(
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
-            onTap: timer,
-            onDoubleTap: () {
-              log('onDoubleTap');
-              setState(() {
-                _controller.value.isPlaying
-                    ? _controller.pause()
-                    : _controller.play();
-              });
-              timer();
-            },
+            onTap: ()=>timer('onTap'),
+            onDoubleTap: ()=>showHide('onDoubleTap'),
             child: Container(
               color: Colors.black,
               child: Stack(
@@ -130,11 +141,12 @@ class VideoAppState extends State<VideoApp>{
                               divisions: 100,
                               label:  _position.inSeconds.toString(),
                               onChanged: (double value) {
-                                setState(() async {
-                                  await _controller.seekTo(
+                                setState(() {
+                                  _controller.seekTo(
                                       Duration(seconds: value.toInt())
                                   );
                                 });
+                                timer('Slider setState');
                               },
                             ),
                             Row(
@@ -202,14 +214,7 @@ class VideoAppState extends State<VideoApp>{
                   ),
                 ),
                 FloatingActionButton(
-                  onPressed: () {
-                    setState(() {
-                      _controller.value.isPlaying
-                          ? _controller.pause()
-                          : _controller.play();
-                    });
-                    timer();
-                  },
+                  onPressed: ()=>showHide('onPressed'),
                   backgroundColor: Colors.transparent,
                   child: Icon(
                     _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,

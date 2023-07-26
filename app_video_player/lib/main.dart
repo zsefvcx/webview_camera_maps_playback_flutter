@@ -17,15 +17,8 @@ class VideoApp extends StatefulWidget {
 class VideoAppState extends State<VideoApp>{
   late VideoPlayerController _controller;
   bool isVis = true;
-  final StreamController _streamController = StreamController<Duration>();
-  StreamSubscription? streamSubscription;
   Duration _position = Duration.zero;
   Duration _size = Duration.zero;
-
-  Future<void> _getPosition() async {
-    Duration? position = await _controller.position;
-    if(position!=null)_streamController.add(position);
-  }
 
   @override
   void initState() {
@@ -71,8 +64,11 @@ class VideoAppState extends State<VideoApp>{
     String nameFile =
     urlString[urlString.length-1].split('-').join(' ').split('.')[0];//вычленить имя из URL
 
+    double width = MediaQuery.of(context).size.width;
+
     void timer(String text) {
       log(text);
+      if(isVis == true) return;
       if(_controller.value.isPlaying){
         setState(() {
           isVis = !isVis;
@@ -87,7 +83,7 @@ class VideoAppState extends State<VideoApp>{
       },);
     }
 
-    void showHide(String text){
+    void showHidePP(String text){
       log(text);
       if(_controller.value.isPlaying){
         _controller.pause();
@@ -107,9 +103,10 @@ class VideoAppState extends State<VideoApp>{
       home: Scaffold(
         body: MouseRegion(
           cursor: SystemMouseCursors.click,
+          //onEnter: (_) => setState(() => isVis = true),
           child: GestureDetector(
             onTap: ()=>timer('onTap'),
-            onDoubleTap: ()=>showHide('onDoubleTap'),
+            onDoubleTap: ()=>showHidePP('onDoubleTap'),
             child: Container(
               color: Colors.black,
               child: Stack(
@@ -132,7 +129,7 @@ class VideoAppState extends State<VideoApp>{
                           : Container(
                         color: Colors.black54,
                         height: 80,
-                        width: 800,
+                        width: width,
                         child: Column(
                           children: [
                             Slider(
@@ -214,7 +211,7 @@ class VideoAppState extends State<VideoApp>{
                   ),
                 ),
                 FloatingActionButton(
-                  onPressed: ()=>showHide('onPressed'),
+                  onPressed: ()=>showHidePP('onPressed'),
                   backgroundColor: Colors.transparent,
                   child: Icon(
                     _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -14,14 +17,31 @@ class VideoApp extends StatefulWidget {
 class VideoAppState extends State<VideoApp>{
   late VideoPlayerController _controller;
 
+  final StreamController _streamController = StreamController<Duration>();
+  StreamSubscription? streamSubscription;
+  Duration _position = Duration.zero;
+
+  Future<void> _getPosition() async {
+    Duration? position = await _controller.position;
+    if(position!=null)_streamController.add(position);
+  }
+
   @override
   void initState() {
     super.initState();
     _controller = VideoPlayerController.networkUrl(Uri.parse(
         'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'))
       ..initialize().then((_) {
-        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-        setState(() {});
+        _controller.addListener(
+              () {
+                if(_position.inSeconds !=  _controller.value.position.inSeconds){
+                  log(_controller.value.position.inSeconds.toString());
+                  setState(() {
+                    _position = _controller.value.position;
+                  });
+                }
+          },
+        );
       });
   }
 
@@ -39,6 +59,7 @@ class VideoAppState extends State<VideoApp>{
                     ? _controller.pause()
                     : _controller.play();
               });
+              setState(() {});
             },
             child: Stack(
               children: [
@@ -48,12 +69,31 @@ class VideoAppState extends State<VideoApp>{
                     aspectRatio: _controller.value.aspectRatio,
                     child: VideoPlayer(_controller),
                   )
-                      : Container(),
+                      : const CircularProgressIndicator(),
                 ),
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: VideoProgressIndicator(_controller, allowScrubbing: true),
-                )
+                Positioned(
+                  bottom: 0,
+                  child: Container(
+                    color: Colors.blue,
+                    height: 100,
+                    child: Column(
+                      children: [
+                        Slider(
+                          value: _position.inSeconds.toDouble(),
+                          max: 5,
+                          divisions: 5,
+                          label:  _position.inSeconds.toString(),
+                          onChanged: (double value) {
+                            setState(() {
+                              //_currentSliderValue = value;
+                            });
+                          },
+                        ),
+                        Text('${_position?.inSeconds}'),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -61,7 +101,7 @@ class VideoAppState extends State<VideoApp>{
         floatingActionButton: AnimatedSwitcher(
           duration: const Duration(milliseconds: 50),
           reverseDuration: const Duration(milliseconds: 200),
-          child: _controller.value.isPlaying
+          child: (_controller.value.isPlaying)
               ? const SizedBox.shrink()
               : Center(
             child: Row(

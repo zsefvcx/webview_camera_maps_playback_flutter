@@ -117,7 +117,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       },
                       icon: const Icon(Icons.arrow_forward)),
                   IconButton(
-                      onPressed: () async {}, icon: const Icon(Icons.refresh)),
+                      onPressed: () async {
+                        await _controller.reload();
+                      }, icon: const Icon(Icons.refresh)),
                   Expanded(
                     flex: 2,
                     child: TextFormField(

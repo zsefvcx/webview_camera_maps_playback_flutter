@@ -85,6 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Container(
                     padding: const EdgeInsets.all(8),
                     child: YandexMap(
+                      mapType: MapType.vector,
                       scrollGesturesEnabled: true,
                       zoomGesturesEnabled: true,
 
